@@ -1,0 +1,228 @@
+<html>
+    <head>
+        <title>Shutnik</title>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <div id="card-list" class="card-list">
+            <div class="card-holder">
+                <div class="card">
+                    <div class="card-visual">
+                        <img src="images/jokers/joker.png">
+                    </div>
+                </div>
+            </div>
+            <div class="card-holder">
+                <div class="card">
+                    <div class="card-visual">
+                        <img src="images/jokers/joker.png">
+                    </div>
+                </div>
+            </div>
+            <div class="card-holder">
+                <div class="card">
+                    <div class="card-visual">
+                        <img src="images/jokers/joker.png">
+                    </div>
+                </div>
+            </div>
+            <div class="card-holder">
+                <div class="card">
+                    <div class="card-visual">
+                        <img src="images/hearts/ace.png">
+                    </div>
+                </div>
+            </div>
+            <div class="card-holder">
+                <div class="card">
+                    <div class="card-visual">
+                        <img src="images/hearts/ace.png">
+                    </div>
+                </div>
+            </div>
+            <div class="card-holder">
+                <div class="card">
+                    <div class="card-visual">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            function lerp( a, b, alpha ) {
+                return a + alpha * ( b - a )
+            }
+            
+            var cardHolders = [... document.getElementsByClassName("card-holder")];
+            var cardList = document.getElementById("card-list");
+        
+            function redraw(delta) {
+                for(var cardHolder of cardHolders) {
+                    var i = cardHolders.indexOf(cardHolder);
+                    
+                    var card = cardHolder.children[0];
+                    
+                    left50 = cardHolder.clientWidth / 2;
+                    top50 = cardHolder.clientHeight / 2;
+                    
+                    if(card.classList.contains("card-dragging")) {
+                        cardHolder.style.zIndex = 99999;
+                    } else {
+                        cardHolder.style.zIndex = i;
+                    }
+                    
+                    var cardRect = card.getBoundingClientRect();
+                    var cardLeft = (cardRect.left + cardRect.right) / 2;
+                    var cardTop = (cardRect.top + cardRect.bottom) / 2;
+                    var holderRect = cardHolder.getBoundingClientRect();
+                    var holderLeft = (holderRect.left + holderRect.right) / 2;
+                    var holderTop = (holderRect.top + holderRect.bottom) / 2;
+                    
+                    cardHolder.style.left = (i / (cardHolders.length - 1)) * (cardList.clientWidth - cardHolder.clientWidth) + "px";
+                    
+                    var arc = 64;
+                    
+                    var topOffset = Math.pow(((i + 0.5) / cardHolders.length) - 0.5, 2) * arc - arc / 2;
+                        
+                    if(delta) {
+                        if(card.classList.contains("card-dragging")) continue;
+                        card.style.left = lerp(parseInt(card.style.left, 10), holderLeft, delta * 12) + "px";
+                        
+                        
+                        card.style.top = lerp(parseInt(card.style.top, 10), holderTop + topOffset, delta * 12) + "px";
+                    } else {
+                        card.style.left = holderLeft + "px";
+                        card.style.top = holderTop + topOffset + "px";
+                    }
+                    
+                }
+            }
+            
+            function dragElement(elmnt) {
+                var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+                var dragging = false;
+                var card = elmnt.children[0];
+                card.onmousedown = dragMouseDown;
+                
+                
+                function dragMouseDown(e) {
+                    e = e || window.event;
+                    e.preventDefault();
+                    pos3 = e.clientX;
+                    pos4 = e.clientY;
+                    document.onmouseup = closeDragElement;
+                    // call a function whenever the cursor moves:
+                    document.onmousemove = elementDrag;
+                    console.log(cardHolders.indexOf(elmnt));
+                }
+                
+                function calcPos(e) {
+                    // calculate the new cursor position:
+                    pos1 = pos3 - e.clientX;
+                    pos2 = pos4 - e.clientY;
+                    pos3 = e.clientX;
+                    pos4 = e.clientY;
+                    // set the element's new position:
+                    card.style.top = (card.offsetTop - pos2) + "px";
+                    card.style.left = (card.offsetLeft - pos1) + "px";
+                }
+                
+                function elementDrag(e) {
+                    e = e || window.event;
+                    e.preventDefault();
+                    // calculate the new cursor position:
+                    calcPos(e);
+                    dragging = true;
+                    
+                    card.classList.add("card-dragging");
+                    
+                    var cardRect = card.getBoundingClientRect();
+                    var cardLeft = (cardRect.left + cardRect.right) / 2;
+                    var elmntRect = elmnt.getBoundingClientRect();
+                    var elmntLeft = (elmntRect.left + elmntRect.right) / 2;
+                    
+                    for(var cardHolder of cardHolders) {
+                        var i = cardHolders.indexOf(cardHolder);
+                        
+                        if(cardHolder == elmnt) continue;
+                        var holderRect = cardHolder.getBoundingClientRect();
+                        var holderLeft = (holderRect.left + holderRect.right) / 2;
+                        
+                        var index = cardHolders.indexOf(elmnt);
+                        
+                        if(cardLeft < holderLeft) {
+                            if(index > i) {
+                                console.log("switch!2");
+                                
+                                cardHolders[i] = elmnt;
+                                cardHolders[index] = cardHolder;
+                                
+                                var othCard = cardHolder.children[0];
+                                var cardHolderWidth = cardHolder.clientWidth;
+                                
+                                break;
+                            }
+                        }
+                        if(cardLeft > holderLeft) {
+                            if(index < i) {
+                                console.log("switch!");
+                                cardHolders[i] = elmnt;
+                                cardHolders[index] = cardHolder;
+                                
+                                var othCard = cardHolder.children[0];
+                                var cardHolderWidth = cardHolder.clientWidth;
+                                
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                function closeDragElement() {
+                    // stop moving when mouse button is released:
+                    document.onmouseup = null;
+                    document.onmousemove = null;
+                    card.classList.remove("card-dragging");
+                }
+            }
+            
+            for(var cardHolder of cardHolders) {
+                dragElement(cardHolder);
+                var card = cardHolder.children[0];
+                /* card.style.backgroundColor = "rgba(" + Math.random() * 256 + ", " + Math.random() * 256 + ", " + Math.random() * 256 + ", 1)"
+                console.log(card.style.backgroundColor); */
+            }
+            
+            var lastUpdate = Date.now();
+            redraw();
+            
+            var clock = 0;
+            function render() {
+                var now = Date.now();
+                var dt = (now - lastUpdate) * 0.001;
+                clock += dt;
+                lastUpdate = now;
+                redraw(dt);
+                
+                var i = 0;
+                
+                for(var cardHolder of cardHolders) {
+                    var card = cardHolder.children[0];
+                    var cardVisual = card.children[0];
+                    var x = "rotateX(" + Math.sin(clock) * 10 + "deg)";
+                    var y = "rotateY(" + Math.cos(clock) * 10 + "deg)"
+                    
+                    var zRot = (((i + 0.5) / cardHolders.length) - 0.5) * 20
+                    
+                    var z = "rotateZ(" + zRot + "deg)"
+                    cardVisual.style.transform = x + " " + y + " " + z;
+                    i += 1;
+                }
+                
+                requestAnimationFrame(render);
+            }
+            
+            render();
+        </script>
+    </body>
+</html>
